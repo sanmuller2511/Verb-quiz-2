@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estação dos Verbos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#182528;
+    --panel:#1f3237;
+    --panel-2:#25393e;
+    --paper:#eee7d8;
+    --gold:#d3a23b;
+    --gold-dim:#9c7a30;
+    --green:#5f9a78;
+    --green-dim:#2e4235;
+    --amber:#d3922f;
+    --amber-dim:#4a3a20;
+    --red:#c15f4f;
+    --red-dim:#4a2a24;
+    --line:rgba(238,231,216,0.14);
+    --muted:rgba(238,231,216,0.6);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--ink);
+    background-image:
+      radial-gradient(circle at 15% 10%, rgba(211,162,59,0.07), transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(95,154,120,0.06), transparent 40%);
+    color:var(--paper);
+    font-family:'IBM Plex Sans', sans-serif;
+    min-height:100vh;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding:32px 16px 64px;
+  }
+  .app{
+    width:100%;
+    max-width:620px;
+  }
+  .masthead{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin-bottom:22px;
+    padding-bottom:14px;
+    border-bottom:1px solid var(--line);
+  }
+  .masthead h1{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:22px;
+    letter-spacing:0.01em;
+    margin:0;
+  }
+  .masthead .ticket{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--muted);
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+  }
+
+  /* progress rail */
+  .rail{margin-bottom:26px;}
+  .rail-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--muted);
+    margin-bottom:8px;
+  }
+  .rail-track{
+    height:3px;
+    width:100%;
+    background:rgba(238,231,216,0.12);
+    border-radius:2px;
+    overflow:hidden;
+  }
+  .rail-fill{
+    height:100%;
+    background:linear-gradient(90deg, var(--gold-dim), var(--gold));
+    transition:width .35s ease;
+  }
+  .tally{
+    display:flex;
+    gap:14px;
+    margin-top:10px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+  }
+  .tally span{display:flex;align-items:center;gap:5px;}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+  .dot.g{background:var(--green);} .dot.y{background:var(--amber);} .dot.r{background:var(--red);}
+  .tally-actions{margin-top:10px;}
+  .btn-link{
+    background:none;
+    border:none;
+    padding:0;
+    color:var(--gold);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+    text-decoration:underline;
+    cursor:pointer;
+  }
+  .btn-link:disabled{color:var(--muted); text-decoration:none; cursor:not-allowed;}
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:38px 34px;
+    position:relative;
+    min-height:340px;
+  }
+
+  /* intro */
+  .intro h2{
+    font-family:'Fraunces', serif;
+    font-size:30px;
+    font-weight:700;
+    margin:0 0 14px;
+    line-height:1.2;
+  }
+  .intro p{
+    color:var(--muted);
+    line-height:1.65;
+    font-size:15px;
+    margin:0 0 14px;
+  }
+  .intro ol{color:var(--muted); font-size:14.5px; line-height:1.8; padding-left:20px; margin:0 0 22px;}
+  .intro ol li strong{color:var(--paper);}
+
+  /* verb display */
+  .verb-eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin-bottom:10px;
+  }
+  .verb-word{
+    font-family:'Fraunces', serif;
+    font-size:52px;
+    font-weight:700;
+    line-height:1;
+    margin-bottom:28px;
+    word-break:break-word;
+  }
+
+  .field{margin-bottom:16px;}
+  .field label{
+    display:block;
+    font-size:12.5px;
+    color:var(--muted);
+    margin-bottom:6px;
+    font-family:'IBM Plex Mono', monospace;
+    letter-spacing:0.03em;
+  }
+  .field input, .field textarea{
+    width:100%;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--paper);
+    border-radius:6px;
+    padding:11px 13px;
+    font-size:15px;
+    font-family:'IBM Plex Sans', sans-serif;
+    outline:none;
+    transition:border-color .2s;
+  }
+  .field input:focus, .field textarea:focus{border-color:var(--gold-dim);}
+  .field textarea{resize:vertical;min-height:64px;line-height:1.5;}
+
+  .btn-row{display:flex;gap:10px;margin-top:24px;justify-content:flex-end;}
+  button{
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:14px;
+    font-weight:600;
+    border-radius:6px;
+    padding:11px 20px;
+    border:1px solid transparent;
+    cursor:pointer;
+    transition:transform .12s, opacity .12s;
+  }
+  button:active{transform:scale(0.97);}
+  button:disabled{opacity:0.35;cursor:not-allowed;}
+  .btn-primary{background:var(--gold); color:#20180a;}
+  .btn-primary:hover:not(:disabled){opacity:0.92;}
+  .btn-ghost{background:transparent;color:var(--paper);border-color:var(--line);}
+  .btn-ghost:hover{border-color:var(--gold-dim);}
+
+  /* stamp feedback */
+  .stamp-wrap{
+    display:flex;
+    align-items:center;
+    gap:18px;
+    margin-bottom:22px;
+    padding:16px 18px;
+    border-radius:8px;
+    border:1px dashed;
+    animation:stampIn .3s ease;
+  }
+  @keyframes stampIn{from{opacity:0; transform:scale(0.9) rotate(-4deg);} to{opacity:1; transform:scale(1) rotate(-2deg);}}
+  .stamp-wrap.green{border-color:var(--green); background:rgba(95,154,120,0.1);}
+  .stamp-wrap.yellow{border-color:var(--amber); background:rgba(211,146,47,0.1);}
+  .stamp-wrap.red{border-color:var(--red); background:rgba(193,95,79,0.1);}
+  .stamp-badge{
+    font-family:'Fraunces', serif;
+    font-weight:700;
+    font-size:26px;
+    width:52px;height:52px;
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+    transform:rotate(-4deg);
+  }
+  .stamp-badge.green{border:3px solid var(--green); color:var(--green);}
+  .stamp-badge.yellow{border:3px solid var(--amber); color:var(--amber);}
+  .stamp-badge.red{border:3px solid var(--red); color:var(--red);}
+  .stamp-text{font-size:14px; line-height:1.5;}
+  .stamp-text b{display:block; font-size:15px;}
+
+  /* sentence phase */
+  .sentence-box{
+    background:var(--panel-2);
+    border-left:3px solid var(--gold);
+    padding:18px 20px;
+    border-radius:0 6px 6px 0;
+    font-family:'Fraunces', serif;
+    font-size:19px;
+    line-height:1.5;
+    margin-bottom:24px;
+  }
+  .choice-row{display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap;}
+  .choice{
+    flex:1;
+    min-width:130px;
+    text-align:center;
+    padding:11px 8px;
+    border-radius:6px;
+    border:1px solid var(--line);
+    background:var(--panel-2);
+    color:var(--muted);
+    cursor:pointer;
+    font-size:13.5px;
+    font-weight:600;
+    transition:all .15s;
+  }
+  .choice:hover{border-color:var(--gold-dim);}
+  .choice.selected{color:var(--ink); border-color:transparent;}
+  .choice.selected.entendi{background:var(--green);}
+  .choice.selected.parcial{background:var(--amber);}
+  .choice.selected.nao{background:var(--red);}
+
+  /* report */
+  .report h2{
+    font-family:'Fraunces', serif;
+    font-size:28px;
+    margin:0 0 6px;
+  }
+  .report .sub{color:var(--muted); font-size:14px; margin-bottom:22px;}
+  .rtabs{display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap;}
+  .rtab{
+    padding:8px 14px;
+    border-radius:6px;
+    border:1px solid var(--line);
+    font-size:13px;
+    font-weight:600;
+    font-family:'IBM Plex Mono', monospace;
+    cursor:pointer;
+    color:var(--muted);
+    background:var(--panel-2);
+    transition:all .15s;
+  }
+  .rtab.green.active{background:rgba(95,154,120,0.18); border-color:var(--green); color:var(--green);}
+  .rtab.yellow.active{background:rgba(211,146,47,0.18); border-color:var(--amber); color:var(--amber);}
+  .rtab.red.active{background:rgba(193,95,79,0.18); border-color:var(--red); color:var(--red);}
+  .report-table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13px;
+    margin-bottom:10px;
+  }
+  .report-table th{
+    text-align:left;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    color:var(--muted);
+    padding:8px 10px;
+    border-bottom:1px solid var(--line);
+  }
+  .report-table td{
+    padding:10px;
+    border-bottom:1px solid var(--line);
+    vertical-align:top;
+    color:var(--paper);
+    line-height:1.45;
+  }
+  .report-table td .p{color:var(--muted); font-family:'IBM Plex Mono', monospace; font-size:11.5px;}
+  .report-table tbody tr:last-child td{border-bottom:none;}
+  .table-scroll{overflow-x:auto; margin:0 -4px 10px;}
+  .table-scroll .report-table{min-width:640px;}
+  .sentence-cell{font-family:'Fraunces', serif; font-style:italic; font-size:13.5px; color:var(--muted); max-width:220px;}
+  .chip{
+    display:block;
+    font-size:11.5px;
+    font-family:'IBM Plex Mono', monospace;
+    padding:3px 8px;
+    border-radius:4px;
+    margin-bottom:4px;
+    width:fit-content;
+  }
+  .chip:last-child{margin-bottom:0;}
+  .chip-ok{background:rgba(95,154,120,0.18); color:var(--green);}
+  .chip-bad{background:rgba(193,95,79,0.18); color:var(--red);}
+  .empty-note{color:var(--muted); font-size:13px; padding:8px 0;}
+
+  @media (max-width:600px){
+    .card{padding:26px 20px;}
+    .verb-word{font-size:38px;}
+    .report-table{font-size:12px;}
+    .report-table th, .report-table td{padding:7px 6px;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important; transition:none !important;}
+  }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+
+<script>
+const VERBS = [
+{base:"be", past:"was / were", meanings:["ser","estar"], sentence:"She was tired after the long flight."},
+{base:"have", past:"had", meanings:["ter"], sentence:"They had a big lunch yesterday."},
+{base:"do", past:"did", meanings:["fazer"], sentence:"He did his homework before dinner."},
+{base:"say", past:"said", meanings:["dizer","falar"], sentence:"She said goodbye and left the room."},
+{base:"go", past:"went", meanings:["ir"], sentence:"We went to the beach last weekend."},
+{base:"get", past:"got", meanings:["conseguir","pegar","obter","ficar"], sentence:"He got a new job last month."},
+{base:"make", past:"made", meanings:["fazer","criar"], sentence:"My mother made a delicious cake."},
+{base:"know", past:"knew", meanings:["saber","conhecer"], sentence:"I knew the answer immediately."},
+{base:"think", past:"thought", meanings:["pensar","achar"], sentence:"She thought about the problem all night."},
+{base:"take", past:"took", meanings:["pegar","levar","tomar"], sentence:"He took the wrong bus this morning."},
+{base:"see", past:"saw", meanings:["ver"], sentence:"They saw a shooting star last night."},
+{base:"come", past:"came", meanings:["vir"], sentence:"She came home late after work."},
+{base:"give", past:"gave", meanings:["dar"], sentence:"He gave her a small gift."},
+{base:"find", past:"found", meanings:["encontrar","achar"], sentence:"We found the keys under the sofa."},
+{base:"tell", past:"told", meanings:["contar","dizer"], sentence:"She told a funny story at dinner."},
+{base:"feel", past:"felt", meanings:["sentir"], sentence:"He felt nervous before the exam."},
+{base:"leave", past:"left", meanings:["sair","deixar","partir"], sentence:"They left the party early."},
+{base:"put", past:"put", meanings:["colocar","por","pôr"], sentence:"She put the book on the table."},
+{base:"mean", past:"meant", meanings:["significar","querer dizer"], sentence:"That word meant something different in the past."},
+{base:"become", past:"became", meanings:["tornar-se","virar"], sentence:"He became a doctor after years of study."},
+{base:"bring", past:"brought", meanings:["trazer"], sentence:"She brought flowers to the party."},
+{base:"begin", past:"began", meanings:["comecar","começar"], sentence:"The movie began ten minutes late."},
+{base:"keep", past:"kept", meanings:["manter","guardar"], sentence:"He kept the secret for years."},
+{base:"hold", past:"held", meanings:["segurar","manter"], sentence:"She held the baby carefully."},
+{base:"write", past:"wrote", meanings:["escrever"], sentence:"He wrote a letter to his old friend."},
+{base:"stand", past:"stood", meanings:["ficar em pe","ficar em pé","estar de pe","estar de pé"], sentence:"They stood in line for an hour."},
+{base:"hear", past:"heard", meanings:["ouvir"], sentence:"I heard a strange noise outside."},
+{base:"let", past:"let", meanings:["deixar","permitir"], sentence:"She let him borrow her car."},
+{base:"speak", past:"spoke", meanings:["falar"], sentence:"He spoke to the manager about the issue."},
+{base:"run", past:"ran", meanings:["correr"], sentence:"She ran to catch the train."},
+{base:"grow", past:"grew", meanings:["crescer","cultivar"], sentence:"The plant grew quickly in the sun."},
+{base:"lose", past:"lost", meanings:["perder"], sentence:"He lost his wallet at the mall."},
+{base:"pay", past:"paid", meanings:["pagar"], sentence:"She paid the bill in cash."},
+{base:"meet", past:"met", meanings:["conhecer","encontrar"], sentence:"They met at a friend's wedding."},
+{base:"set", past:"set", meanings:["definir","colocar","ajustar"], sentence:"He set the table for dinner."},
+{base:"sit", past:"sat", meanings:["sentar"], sentence:"She sat by the window all afternoon."},
+{base:"read", past:"read", meanings:["ler"], sentence:"He read the whole book in one day."},
+{base:"send", past:"sent", meanings:["enviar","mandar"], sentence:"She sent the email this morning."},
+{base:"build", past:"built", meanings:["construir"], sentence:"They built a house near the lake."},
+{base:"spend", past:"spent", meanings:["gastar","passar"], sentence:"He spent all his money on books."},
+{base:"fall", past:"fell", meanings:["cair"], sentence:"She fell asleep during the movie."},
+{base:"cut", past:"cut", meanings:["cortar"], sentence:"He cut his finger while cooking."},
+{base:"understand", past:"understood", meanings:["entender","compreender"], sentence:"She understood the problem right away."},
+{base:"draw", past:"drew", meanings:["desenhar"], sentence:"The child drew a picture of her dog."},
+{base:"break", past:"broke", meanings:["quebrar"], sentence:"He broke his phone screen yesterday."},
+{base:"choose", past:"chose", meanings:["escolher"], sentence:"She chose the blue dress for the party."},
+{base:"throw", past:"threw", meanings:["jogar","arremessar"], sentence:"He threw the ball across the yard."},
+{base:"forget", past:"forgot", meanings:["esquecer"], sentence:"I forgot my umbrella at home."},
+{base:"teach", past:"taught", meanings:["ensinar"], sentence:"She taught English for ten years."},
+{base:"win", past:"won", meanings:["ganhar","vencer"], sentence:"Their team won the championship."},
+{base:"eat", past:"ate", meanings:["comer"], sentence:"They ate dinner together last night."},
+{base:"drink", past:"drank", meanings:["beber"], sentence:"He drank a glass of water quickly."},
+{base:"buy", past:"bought", meanings:["comprar"], sentence:"She bought a new pair of shoes."},
+{base:"wear", past:"wore", meanings:["usar","vestir"], sentence:"He wore a blue jacket to the meeting."},
+{base:"sell", past:"sold", meanings:["vender"], sentence:"They sold their old car last week."},
+{base:"sleep", past:"slept", meanings:["dormir"], sentence:"The baby slept through the night."},
+{base:"ride", past:"rode", meanings:["andar de","cavalgar"], sentence:"She rode her bike to school."},
+{base:"drive", past:"drove", meanings:["dirigir"], sentence:"He drove all the way to the coast."},
+{base:"hide", past:"hid", meanings:["esconder"], sentence:"The cat hid under the bed."},
+{base:"rise", past:"rose", meanings:["subir","levantar-se","nascer"], sentence:"The sun rose over the mountains."},
+{base:"shake", past:"shook", meanings:["sacudir","tremer"], sentence:"The ground shook during the earthquake."},
+{base:"hang", past:"hung", meanings:["pendurar"], sentence:"She hung the painting on the wall."},
+{base:"hit", past:"hit", meanings:["bater","acertar"], sentence:"The ball hit the window."},
+{base:"hurt", past:"hurt", meanings:["machucar","doer"], sentence:"He hurt his knee playing football."},
+{base:"shut", past:"shut", meanings:["fechar"], sentence:"She shut the door quietly."},
+{base:"bite", past:"bit", meanings:["morder"], sentence:"The dog bit the mailman."},
+{base:"steal", past:"stole", meanings:["roubar"], sentence:"Someone stole her bicycle last night."},
+{base:"fly", past:"flew", meanings:["voar"], sentence:"The bird flew away quickly."},
+{base:"sing", past:"sang", meanings:["cantar"], sentence:"She sang beautifully at the concert."},
+{base:"swim", past:"swam", meanings:["nadar"], sentence:"He swam across the lake."}
+];
+
+// ---------- state ----------
+let phase = "intro"; // intro | input | stamp | sentence | report
+let idx = 0;
+let results = []; // {base,past,color,comprehension,comprehensionText}
+let lastGrade = null; // {presentCorrect, meaningCorrect, color}
+let presentVal = "";
+let meaningVal = "";
+let compChoice = null;
+let compText = "";
+let reportTab = "green";
+
+// ---------- helpers ----------
+function normalize(s){
+  return (s||"")
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/^to\s+/,"")
+    .replace(/[.,!?;:]/g,"")
+    .trim();
+}
+
+// irregular / accepted present-tense forms in English
+const PRESENT_ALT = {
+  be:["am","is","are","being"],
+  have:["has","having"],
+  do:["does","doing"],
+  go:["goes","going"]
+};
+function presentVariants(base){
+  if(PRESENT_ALT[base]) return PRESENT_ALT[base];
+  let s;
+  if(/([sxz]|[cs]h)$/.test(base)) s = base+"es";
+  else if(/[^aeiou]y$/.test(base)) s = base.slice(0,-1)+"ies";
+  else s = base+"s";
+  return [s];
+}
+// English word tokens from free-form input like "be (am, is, are)"
+function tokens(s){
+  return normalize(s).match(/[a-z]+/g) || [];
+}
+function checkPresent(input, entry){
+  const t = tokens(input);
+  if(t.length===0) return false;
+  const accepted = [entry.base, ...presentVariants(entry.base)].map(normalize);
+  return t.some(tok=>accepted.includes(tok));
+}
+
+// common Portuguese past-tense conjugations for the infinitives used in meanings,
+// so answers given in past form (any person) are accepted too
+const PT_VARIANTS = {
+  ser:["era","eras","eramos","foi","fui","fomos","foram","sao","e","eh","seria"],
+  estar:["estava","estavas","estavamos","esteve","estive","estivemos","estiveram","esta","tava"],
+  ter:["tinha","tinhas","tinhamos","teve","tive","tivemos","tiveram","tem"],
+  ir:["ia","ias","iamos","foi","fui","fomos","foram","vai","vou"],
+  fazer:["fazia","fazias","faziamos","fez","fiz","fizemos","fizeram","faz"],
+  dizer:["dizia","dizias","diziamos","disse","dissemos","disseram","diz"],
+  ver:["via","vias","viamos","viu","vi","vimos","viram","ve"],
+  vir:["vinha","vinhas","vinhamos","veio","vim","viemos","vieram","vem"],
+  dar:["dava","davas","davamos","deu","dei","demos","deram","da"],
+  poder:["podia","podias","podiamos","pode","pude","pudemos","puderam"],
+  querer:["queria","querias","queriamos","quis","quisemos","quiseram"],
+  conseguir:["conseguia","conseguiu","consegui","conseguimos","conseguiram"],
+  pegar:["pegava","pegou","peguei","pegamos","pegaram"],
+  obter:["obtinha","obteve","obtive","obtivemos","obtiveram"],
+  ficar:["ficava","ficou","fiquei","ficamos","ficaram"],
+  saber:["sabia","sabias","sabiamos","soube","soubemos","souberam","sei"],
+  pensar:["pensava","pensou","pensei","pensamos","pensaram"],
+  achar:["achava","achou","achei","achamos","acharam"],
+  tomar:["tomava","tomou","tomei","tomamos","tomaram"],
+  levar:["levava","levou","levei","levamos","levaram"],
+  encontrar:["encontrava","encontrou","encontrei","encontramos","encontraram"],
+  contar:["contava","contou","contei","contamos","contaram"],
+  sentir:["sentia","sentiu","senti","sentimos","sentiram"],
+  sair:["saia","saiu","sai","saimos","sairam"],
+  deixar:["deixava","deixou","deixei","deixamos","deixaram"],
+  partir:["partia","partiu","parti","partimos","partiram"],
+  colocar:["colocava","colocou","coloquei","colocamos","colocaram"],
+  por:["punha","pos","pus","pusemos","puseram"],
+  significar:["significava","significou","significa","significou"],
+  virar:["virava","virou","virei","viramos","viraram"],
+  trazer:["trazia","trouxe","trouxemos","trouxeram","traz"],
+  comecar:["comecava","comecou","comecei","comecamos","comecaram"],
+  manter:["mantinha","manteve","mantive","mantivemos","mantiveram"],
+  guardar:["guardava","guardou","guardei","guardamos","guardaram"],
+  segurar:["segurava","segurou","segurei","seguramos","seguraram"],
+  escrever:["escrevia","escreveu","escrevi","escrevemos","escreveram"],
+  ouvir:["ouvia","ouviu","ouvi","ouvimos","ouviram"],
+  permitir:["permitia","permitiu","permiti","permitimos","permitiram"],
+  falar:["falava","falou","falei","falamos","falaram"],
+  correr:["corria","correu","corri","corremos","correram"],
+  crescer:["crescia","cresceu","cresci","crescemos","cresceram"],
+  cultivar:["cultivava","cultivou","cultivei","cultivamos","cultivaram"],
+  perder:["perdia","perdeu","perdi","perdemos","perderam"],
+  pagar:["pagava","pagou","paguei","pagamos","pagaram"],
+  conhecer:["conhecia","conheceu","conheci","conhecemos","conheceram"],
+  definir:["definia","definiu","defini","definimos","definiram"],
+  ajustar:["ajustava","ajustou","ajustei","ajustamos","ajustaram"],
+  sentar:["sentava","sentou","sentei","sentamos","sentaram"],
+  ler:["lia","leu","li","lemos","leram"],
+  enviar:["enviava","enviou","enviei","enviamos","enviaram"],
+  mandar:["mandava","mandou","mandei","mandamos","mandaram"],
+  construir:["construia","construiu","construi","construimos","construiram"],
+  gastar:["gastava","gastou","gastei","gastamos","gastaram"],
+  passar:["passava","passou","passei","passamos","passaram"],
+  cair:["caia","caiu","cai","caimos","cairam"],
+  cortar:["cortava","cortou","cortei","cortamos","cortaram"],
+  entender:["entendia","entendeu","entendi","entendemos","entenderam"],
+  compreender:["compreendia","compreendeu","compreendi","compreendemos","compreenderam"],
+  desenhar:["desenhava","desenhou","desenhei","desenhamos","desenharam"],
+  quebrar:["quebrava","quebrou","quebrei","quebramos","quebraram"],
+  escolher:["escolhia","escolheu","escolhi","escolhemos","escolheram"],
+  jogar:["jogava","jogou","joguei","jogamos","jogaram"],
+  arremessar:["arremessava","arremessou","arremessei","arremessamos","arremessaram"],
+  esquecer:["esquecia","esqueceu","esqueci","esquecemos","esqueceram"],
+  ensinar:["ensinava","ensinou","ensinei","ensinamos","ensinaram"],
+  ganhar:["ganhava","ganhou","ganhei","ganhamos","ganharam"],
+  vencer:["vencia","venceu","venci","vencemos","venceram"],
+  comer:["comia","comeu","comi","comemos","comeram"],
+  beber:["bebia","bebeu","bebi","bebemos","beberam"],
+  comprar:["comprava","comprou","comprei","compramos","compraram"],
+  usar:["usava","usou","usei","usamos","usaram"],
+  vestir:["vestia","vestiu","vesti","vestimos","vestiram"],
+  vender:["vendia","vendeu","vendi","vendemos","venderam"],
+  dormir:["dormia","dormiu","dormi","dormimos","dormiram"],
+  cavalgar:["cavalgava","cavalgou","cavalguei","cavalgamos","cavalgaram"],
+  dirigir:["dirigia","dirigiu","dirigi","dirigimos","dirigiram"],
+  esconder:["escondia","escondeu","escondi","escondemos","esconderam"],
+  subir:["subia","subiu","subi","subimos","subiram"],
+  nascer:["nascia","nasceu","nasci","nascemos","nasceram"],
+  sacudir:["sacudia","sacudiu","sacudi","sacudimos","sacudiram"],
+  tremer:["tremia","tremeu","tremi","trememos","tremeram"],
+  pendurar:["pendurava","pendurou","pendurei","penduramos","penduraram"],
+  bater:["batia","bateu","bati","batemos","bateram"],
+  acertar:["acertava","acertou","acertei","acertamos","acertaram"],
+  machucar:["machucava","machucou","machuquei","machucamos","machucaram"],
+  doer:["doia","doeu"],
+  fechar:["fechava","fechou","fechei","fechamos","fecharam"],
+  morder:["mordia","mordeu","mordi","mordemos","morderam"],
+  roubar:["roubava","roubou","roubei","roubamos","roubaram"],
+  voar:["voava","voou","voei","voamos","voaram"],
+  cantar:["cantava","cantou","cantei","cantamos","cantaram"],
+  nadar:["nadava","nadou","nadei","nadamos","nadaram"],
+  "tornar-se":["tornava-se","tornou-se","tornei-me","virou","tornar"],
+  "levantar-se":["levantava-se","levantou-se","levantei-me"]
+};
+// split a free-form answer like "era/estava" or "ser, estar" into parts
+function splitParts(s){
+  return normalize(s).split(/[\/,;]| ou | or /).map(x=>x.trim()).filter(Boolean);
+}
+// crude Portuguese stemmer: strips common verb-ending inflections so that
+// any conjugated form of a regular verb (any person, any tense) reduces to
+// roughly the same stem as its infinitive — used as a last-resort fallback
+// for verbs/answers not covered by the explicit PT_VARIANTS list above.
+function stemPT(word){
+  let w = normalize(word);
+  const suffixes = [
+    "assemos","essemos","issemos","ariamos","eriamos","iriamos",
+    "avamos","iamos","aram","eram","iram","asse","esse","isse",
+    "aria","eria","iria","ando","endo","indo","amos","emos","imos",
+    "ei","ou","eu","iu","ia","am","em","ar","er","ir","a","e","o"
+  ];
+  for(const suf of suffixes){
+    if(w.length - suf.length >= 3 && w.endsWith(suf)){
+      return w.slice(0, w.length - suf.length);
+    }
+  }
+  return w;
+}
+function checkMeaning(input, entry){
+  const whole = normalize(input);
+  if(!whole) return false;
+  const parts = [whole, ...splitParts(input)];
+  for(const m of entry.meanings){
+    const nm = normalize(m);
+    const variants = [nm, ...(PT_VARIANTS[nm]||[]).map(normalize)];
+    for(const part of parts){
+      if(!part) continue;
+      // 1) direct / substring match against known forms
+      for(const v of variants){
+        if(part === v || part.includes(v) || v.includes(part)) return true;
+      }
+      // 2) stem fallback — catches conjugations not explicitly listed
+      const partStem = stemPT(part);
+      if(partStem.length >= 3){
+        for(const v of variants){
+          const vStem = stemPT(v);
+          if(vStem.length >= 3 && partStem === vStem) return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+function gradeColor(p,m){
+  if(p && m) return "green";
+  if(p || m) return "yellow";
+  return "red";
+}
+
+function render(){
+  const app = document.getElementById("app");
+  const total = VERBS.length;
+  const gCount = results.filter(r=>r.color==="green").length;
+  const yCount = results.filter(r=>r.color==="yellow").length;
+  const rCount = results.filter(r=>r.color==="red").length;
+
+  let head = "";
+  if(phase !== "intro" && phase !== "report"){
+    const pct = Math.round((idx/total)*100);
+    head = `
+      <div class="masthead">
+        <h1>Estacao dos Verbos</h1>
+        <div class="ticket">70 verbos irregulares</div>
+      </div>
+      <div class="rail">
+        <div class="rail-top"><span>Verbo ${idx+1} de ${total}</span><span>${pct}%</span></div>
+        <div class="rail-track"><div class="rail-fill" style="width:${pct}%"></div></div>
+        <div class="tally">
+          <span><span class="dot g"></span>${gCount} corretos</span>
+          <span><span class="dot y"></span>${yCount} parciais</span>
+          <span><span class="dot r"></span>${rCount} a revisar</span>
+        </div>
+        <div class="tally-actions">
+          <button class="btn-link" ${results.length===0?'disabled':''} onclick="generateReportNow()">Gerar relatorio agora (${results.length} respondidos)</button>
+        </div>
+      </div>`;
+  } else if(phase === "intro"){
+    head = `
+      <div class="masthead">
+        <h1>Estacao dos Verbos</h1>
+        <div class="ticket">Passado simples</div>
+      </div>`;
+  } else if(phase === "report"){
+    head = `
+      <div class="masthead">
+        <h1>Estacao dos Verbos</h1>
+        <div class="ticket">Relatorio final</div>
+      </div>`;
+  }
+
+  let body = "";
+
+  if(phase === "intro"){
+    body = `
+      <div class="card intro">
+        <h2>70 verbos irregulares no passado</h2>
+        <p>Voce vai ver cada verbo na sua forma de passado simples. Para cada um:</p>
+        <ol>
+          <li><strong>Passo 1</strong> — escreva a forma no presente (infinitivo) e um significado em portugues.</li>
+          <li><strong>Verde</strong> = os dois certos. <strong>Amarelo</strong> = um certo. <strong>Vermelho</strong> = nenhum certo.</li>
+          <li><strong>Passo 2</strong> — leia uma frase de exemplo e diga se entendeu, entendeu em parte ou nao entendeu, escrevendo o que compreendeu em portugues.</li>
+          <li>No final, um relatorio mostra os verbos verdes, amarelos e vermelhos.</li>
+        </ol>
+        <div class="btn-row">
+          <button class="btn-primary" onclick="startQuiz()">Comecar</button>
+        </div>
+      </div>`;
+  }
+
+  else if(phase === "input"){
+    const v = VERBS[idx];
+    body = `
+      <div class="card">
+        <div class="verb-eyebrow">Forma do passado</div>
+        <div class="verb-word">${v.past}</div>
+        <div class="field">
+          <label for="presentInput">Forma no presente (infinitivo)</label>
+          <input id="presentInput" type="text" autocomplete="off" placeholder="ex: to go" value="${presentVal.replace(/"/g,'&quot;')}" oninput="presentVal=this.value">
+        </div>
+        <div class="field">
+          <label for="meaningInput">Significado em portugues</label>
+          <input id="meaningInput" type="text" autocomplete="off" placeholder="ex: ir" value="${meaningVal.replace(/"/g,'&quot;')}" oninput="meaningVal=this.value">
+        </div>
+        <div class="btn-row">
+          <button class="btn-primary" onclick="submitAnswer()">Verificar</button>
+        </div>
+      </div>`;
+  }
+
+  else if(phase === "stamp"){
+    const v = VERBS[idx];
+    const g = lastGrade;
+    const symbol = g.color==="green" ? "OK" : g.color==="yellow" ? "~" : "X";
+    const label = g.color==="green" ? "Os dois certos" : g.color==="yellow" ? "Um dos dois certo" : "Nenhum dos dois certo";
+    body = `
+      <div class="card">
+        <div class="verb-eyebrow">Forma do passado</div>
+        <div class="verb-word">${v.past}</div>
+        <div class="stamp-wrap ${g.color}">
+          <div class="stamp-badge ${g.color}">${symbol}</div>
+          <div class="stamp-text">
+            <b>${label}</b>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn-primary" onclick="goToSentence()">Continuar</button>
+        </div>
+      </div>`;
+  }
+
+  else if(phase === "sentence"){
+    const v = VERBS[idx];
+    body = `
+      <div class="card">
+        <div class="verb-eyebrow">Frase de exemplo</div>
+        <div class="sentence-box">${v.sentence}</div>
+        <div class="field">
+          <label>Voce entendeu a frase?</label>
+          <div class="choice-row">
+            <div class="choice entendi ${compChoice==='entendi'?'selected':''}" onclick="setComp('entendi')">Entendi</div>
+            <div class="choice parcial ${compChoice==='parcial'?'selected':''}" onclick="setComp('parcial')">Entendi em parte</div>
+            <div class="choice nao ${compChoice==='nao'?'selected':''}" onclick="setComp('nao')">Nao entendi</div>
+          </div>
+        </div>
+        <div class="field">
+          <label for="compTextArea">O que voce entendeu? (em portugues)</label>
+          <textarea id="compTextArea" placeholder="Escreva aqui..." oninput="compText=this.value">${compText}</textarea>
+        </div>
+        <div class="btn-row">
+          <button class="btn-primary" ${compChoice?'':'disabled'} onclick="nextVerb()">
+            ${idx===VERBS.length-1 ? "Ver relatorio" : "Proximo verbo"}
+          </button>
+        </div>
+      </div>`;
+  }
+
+  else if(phase === "report"){
+    const groups = {green:[], yellow:[], red:[]};
+    results.forEach(r=>groups[r.color].push(r));
+    const compLabel = {entendi:"Entendeu", parcial:"Parcial", nao:"Nao entendeu"};
+    const tabMeta = {
+      green:{label:"Verde", cls:"green"},
+      yellow:{label:"Amarelo", cls:"yellow"},
+      red:{label:"Vermelho", cls:"red"}
+    };
+    function detailChips(r){
+      if(r.color==="green") return `<span class="chip chip-ok">Tudo certo</span>`;
+      let chips = "";
+      if(!r.presentCorrect) chips += `<span class="chip chip-bad">Presente: "${r.presentGiven||'-'}"</span>`;
+      if(!r.meaningCorrect) chips += `<span class="chip chip-bad">Significado: "${r.meaningGiven||'-'}"</span>`;
+      return chips;
+    }
+    function tableHTML(arr){
+      if(arr.length===0) return `<div class="empty-note">Nenhum verbo nesta categoria ainda.</div>`;
+      return `
+        <div class="table-scroll">
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th>Verbo</th>
+              <th>Frase (EN)</th>
+              <th>O que faltou</th>
+              <th>Compreensao</th>
+              <th>O que o aluno escreveu</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${arr.map(r=>`
+              <tr>
+                <td><b>${r.past}</b><br><span class="p">${r.base}</span></td>
+                <td class="sentence-cell">${r.sentence||''}</td>
+                <td>${detailChips(r)}</td>
+                <td>${compLabel[r.comprehension]||'-'}</td>
+                <td>${r.comprehensionText ? r.comprehensionText.replace(/</g,'&lt;') : '<span class="p">(em branco)</span>'}</td>
+              </tr>`).join("")}
+          </tbody>
+        </table>
+        </div>`;
+    }
+    const tabs = ["green","yellow","red"].map(k=>
+      `<div class="rtab ${tabMeta[k].cls} ${reportTab===k?'active':''}" onclick="setReportTab('${k}')">${tabMeta[k].label} (${groups[k].length})</div>`
+    ).join("");
+    body = `
+      <div class="card report">
+        <h2>Relatorio final</h2>
+        <div class="sub">${results.length} de ${VERBS.length} verbos respondidos · ${groups.green.length} verdes · ${groups.yellow.length} amarelos · ${groups.red.length} vermelhos</div>
+        <div class="rtabs">${tabs}</div>
+        ${tableHTML(groups[reportTab])}
+        <div class="btn-row">
+          <button class="btn-ghost" onclick="restart()">Reiniciar</button>
+        </div>
+      </div>`;
+  }
+
+  app.innerHTML = head + body;
+
+  if(phase === "input"){
+    const pInput = document.getElementById("presentInput");
+    if(pInput){
+      pInput.focus();
+      [pInput, document.getElementById("meaningInput")].forEach(el=>{
+        el.addEventListener("keydown", e=>{ if(e.key==="Enter") submitAnswer(); });
+      });
+    }
+  }
+}
+
+function startQuiz(){
+  phase = "input";
+  render();
+}
+
+function submitAnswer(){
+  const v = VERBS[idx];
+  const presentCorrect = checkPresent(presentVal, v);
+  const meaningCorrect = checkMeaning(meaningVal, v);
+  const color = gradeColor(presentCorrect, meaningCorrect);
+  lastGrade = {presentCorrect, meaningCorrect, color};
+  phase = "stamp";
+  render();
+}
+
+function goToSentence(){
+  phase = "sentence";
+  compChoice = null;
+  compText = "";
+  render();
+}
+
+function setComp(choice){
+  compChoice = choice;
+  render();
+  const ta = document.getElementById("compTextArea");
+  if(ta) ta.focus();
+}
+
+function nextVerb(){
+  const v = VERBS[idx];
+  results.push({
+    base: v.base,
+    past: v.past,
+    sentence: v.sentence,
+    color: lastGrade.color,
+    presentCorrect: lastGrade.presentCorrect,
+    meaningCorrect: lastGrade.meaningCorrect,
+    presentGiven: presentVal,
+    meaningGiven: meaningVal,
+    meaningExpected: v.meanings[0],
+    comprehension: compChoice,
+    comprehensionText: compText
+  });
+  presentVal = "";
+  meaningVal = "";
+  compChoice = null;
+  compText = "";
+  lastGrade = null;
+
+  if(idx === VERBS.length-1){
+    phase = "report";
+  } else {
+    idx++;
+    phase = "input";
+  }
+  render();
+}
+
+function generateReportNow(){
+  phase = "report";
+  render();
+}
+
+function setReportTab(k){
+  reportTab = k;
+  render();
+}
+
+function restart(){
+  reportTab = "green";
+  phase = "intro";
+  idx = 0;
+  results = [];
+  lastGrade = null;
+  presentVal = "";
+  meaningVal = "";
+  compChoice = null;
+  compText = "";
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
